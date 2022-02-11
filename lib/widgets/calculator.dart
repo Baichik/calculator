@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:math_expressions/math_expressions.dart';
 
 class Calculator extends StatefulWidget {
   const Calculator({
@@ -11,25 +12,35 @@ class Calculator extends StatefulWidget {
 
 class _Calculator extends State<Calculator> {
   String history = '';
-  String expresion = '';
+  String expression = '';
+
   void onButtonPress(buttonText) {
-    setState(() {
-      expresion += buttonText;
-    });
+    if (buttonText == '=') {
+      execute(buttonText);
+    } else if (buttonText == 'C') {
+      clear(buttonText);
+    } else if (buttonText == '+/-') {
+      var num = int.parse(expression);
+      setState(() {
+        num *= -1;
+        expression = '$num';
+      });
+    } else {
+      clicked(buttonText);
+    }
   }
 
-  bool isOperator(String button) {
-    if (button == 'C' ||
-        button == '+/-' ||
-        button == '%' ||
-        button == '+' ||
+  int isOperator(String button) {
+    if (button == '+' ||
         button == '-' ||
-        button == 'X' ||
+        button == '*' ||
         button == '/' ||
         button == '=') {
-      return true;
+      return 1;
+    } else if (button == 'C' || button == '+/-' || button == '%') {
+      return 2;
     } else {
-      return false;
+      return 3;
     }
   }
 
@@ -41,7 +52,7 @@ class _Calculator extends State<Calculator> {
     '7',
     '8',
     '9',
-    'X',
+    '*',
     '4',
     '5',
     '6',
@@ -50,7 +61,7 @@ class _Calculator extends State<Calculator> {
     '2',
     '3',
     '+',
-    ',',
+    '.',
     '0',
     '00',
     '='
@@ -68,7 +79,11 @@ class _Calculator extends State<Calculator> {
               Expanded(
                 flex: 1,
                 child: Container(
-                    color: const Color.fromARGB(255, 232, 232, 232),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF17171C),
+                      border: Border.all(
+                          color: const Color(0xFF17171C), width: 4.0),
+                    ),
                     child: Align(
                       alignment: Alignment.bottomRight,
                       child: Padding(
@@ -76,9 +91,9 @@ class _Calculator extends State<Calculator> {
                         child: Text(
                           history,
                           style: const TextStyle(
-                            fontSize: 28,
-                            color: Color(0xFF545F61),
-                          ),
+                              fontWeight: FontWeight.w200,
+                              fontSize: 40,
+                              color: Color.fromRGBO(255, 255, 255, 0.4)),
                         ),
                       ),
                     )),
@@ -86,16 +101,22 @@ class _Calculator extends State<Calculator> {
               Expanded(
                 flex: 1,
                 child: Container(
-                    color: const Color.fromARGB(255, 232, 232, 232),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF17171C),
+                      border: Border.all(
+                          color: const Color(0xFF17171C), width: 4.0),
+                    ),
                     child: Align(
                       alignment: Alignment.bottomRight,
                       child: Padding(
                         padding: const EdgeInsets.only(right: 20.0),
                         child: Text(
-                          expresion,
+                          expression,
                           style: const TextStyle(
-                              fontSize: 48,
-                              color: Color.fromARGB(255, 18, 18, 19)),
+                              letterSpacing: 2,
+                              fontWeight: FontWeight.w300,
+                              fontSize: 60,
+                              color: Color(0xFFFFFFFF)),
                         ),
                       ),
                     )),
@@ -105,7 +126,7 @@ class _Calculator extends State<Calculator> {
       Expanded(
         flex: 6,
         child: Container(
-          color: const Color.fromARGB(255, 232, 232, 232),
+          color: const Color(0xFF17171C),
           child: Padding(
             padding: const EdgeInsets.all(10.0),
             child: GridView.builder(
@@ -117,24 +138,56 @@ class _Calculator extends State<Calculator> {
                 padding: const EdgeInsets.all(5.0),
                 child: MaterialButton(
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.0)),
-                    color: isOperator(buttons[index])
-                        ? const Color(0xFF1D3354)
-                        : const Color(0xFF467599),
+                        borderRadius: BorderRadius.circular(24.0)),
+                    color: isOperator(buttons[index]) == 1
+                        ? const Color(0xFF4B5EFC)
+                        : isOperator(buttons[index]) == 2
+                            ? const Color(0xFF4E505F)
+                            : const Color(0xFF2E2F38),
                     textColor: Colors.white,
                     onPressed: () {
                       onButtonPress(buttons[index]);
                     },
                     child: Text(buttons[index],
                         style: const TextStyle(
-                            fontSize: 24.0,
+                            fontSize: 32.0,
                             fontWeight: FontWeight.bold,
-                            letterSpacing: 2))),
+                            letterSpacing: 4))),
               ),
             ),
           ),
         ),
       ),
     ]));
+  }
+
+  void execute(String button) {
+    Parser parser = Parser();
+    Expression exp = parser.parse(expression);
+    ContextModel contextModel = ContextModel();
+
+    setState(() {
+      history = expression;
+      expression = exp.evaluate(EvaluationType.REAL, contextModel).toString();
+    });
+  }
+
+  void clicked(String button) {
+    if (expression.length >= 9) {
+      setState(() {
+        expression.length - 1;
+      });
+    } else {
+      setState(() {
+        expression += button;
+      });
+    }
+  }
+
+  void clear(String button) {
+    setState(() {
+      history = '';
+      expression = '';
+    });
   }
 }
