@@ -13,12 +13,13 @@ class Calculator extends StatefulWidget {
 class _Calculator extends State<Calculator> {
   String history = '';
   String expression = '';
+  bool isEqually = false;
 
   void onButtonPress(buttonText) {
     if (buttonText == '=') {
       execute(buttonText);
     } else if (buttonText == 'C') {
-      clear(buttonText);
+      clear();
     } else if (buttonText == '+/-') {
       var num = int.parse(expression);
       setState(() {
@@ -168,23 +169,32 @@ class _Calculator extends State<Calculator> {
 
     setState(() {
       history = expression;
+      isEqually = true;
       expression = exp.evaluate(EvaluationType.REAL, contextModel).toString();
     });
   }
 
-  void clicked(String button) {
-    if (expression.length >= 9) {
+  bool clicked(String button) {
+    if (button == '0' && expression == '' ||
+        button == '00' && expression == '' ||
+        button == '.' && expression == '') {
       setState(() {
-        expression.length - 1;
+        expression += '0.';
+      });
+    } else if (isEqually == true) {
+      setState(() {
+        expression = button;
+        isEqually = false;
       });
     } else {
       setState(() {
         expression += button;
       });
     }
+    return true;
   }
 
-  void clear(String button) {
+  void clear() {
     setState(() {
       history = '';
       expression = '';
